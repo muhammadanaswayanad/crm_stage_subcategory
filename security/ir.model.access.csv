@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_crm_stage_subcategory_user,crm.stage.subcategory.user,model_crm_stage_subcategory,sales_team.group_sale_salesman,1,0,0,0
 access_crm_stage_subcategory_manager,crm.stage.subcategory.manager,model_crm_stage_subcategory,sales_team.group_sale_manager,1,1,1,1
+access_crm_lead_substage_wizard_user,crm.lead.substage.wizard.user,model_crm_lead_substage_wizard,sales_team.group_sale_salesman,1,1,1,0

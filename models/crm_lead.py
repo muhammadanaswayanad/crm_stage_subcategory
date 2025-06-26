@@ -12,6 +12,33 @@ class CrmLead(models.Model):
         tracking=True,
         help="Additional classification within the stage"
     )
+    
+    def action_open_substage_wizard(self, stage_id=False):
+        """Open a wizard to select the substage when changing stage"""
+        self.ensure_one()
+        target_stage_id = stage_id or self.stage_id.id
+        
+        # Check if the target stage has subcategories
+        subcategories = self.env['crm.stage.subcategory'].search_count([
+            ('stage_id', '=', target_stage_id),
+            ('active', '=', True)
+        ])
+        
+        # Only open wizard if there are multiple substages available
+        if subcategories > 1:
+            return {
+                'name': _('Select Substage'),
+                'type': 'ir.actions.act_window',
+                'res_model': 'crm.lead.substage.wizard',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': {
+                    'default_lead_id': self.id,
+                    'default_stage_id': target_stage_id,
+                }
+            }
+        
+        return False
 
     @api.constrains('stage_id', 'sub_stage_id')
     def _check_substage_required(self):
@@ -79,3 +106,34 @@ class CrmLead(models.Model):
             
             if default_subcategory:
                 self.sub_stage_id = default_subcategory.id
+                
+    def write(self, vals):
+        """Override write to intercept stage changes and open substage wizard if needed"""
+        # Store the original stage_id values before write
+        if 'stage_id' in vals and self and not self.env.context.get('skip_substage_wizard'):
+            # Only process if there's a stage change and substage wizard should not be skipped
+            new_stage_id = vals['stage_id']
+            
+            # Check if the target stage has substages
+            substages_count = self.env['crm.stage.subcategory'].search_count([
+                ('stage_id', '=', new_stage_id),
+                ('active', '=', True)
+            ])
+            
+            # If there are multiple substages and this isn't coming from our wizard,
+            # we should intercept the stage change and open the wizard
+            if substages_count > 1 and self.env.context.get('from_substage_wizard') != True:
+                # We need to handle one record at a time for the wizard
+                if len(self) == 1:
+                    # Store the value to be set in the wizard
+                    action = self.action_open_substage_wizard(new_stage_id)
+                    if action:
+                        # Don't update the stage yet - will be done by the wizard
+                        vals.pop('stage_id')
+                        # First perform the write without stage_id
+                        result = super().write(vals)
+                        # Return the wizard action
+                        return action
+        
+        # Default behavior - perform the write normally
+        return super().write(vals)

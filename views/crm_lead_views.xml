@@ -14,6 +14,16 @@
                        invisible="stage_id == False"
                        domain="[('stage_id', '=', stage_id), ('active', '=', True)]"/>
             </xpath>
+            
+            <!-- Add button next to stage field to open substage wizard -->
+            <xpath expr="//field[@name='stage_id']" position="after">
+                <button name="action_open_substage_wizard" 
+                        string="Select Substage" 
+                        type="object" 
+                        class="oe_inline ms-2 btn-sm btn-secondary" 
+                        attrs="{'invisible': [('stage_id', '=', False)]}"
+                        help="Select or change the substage"/>
+            </xpath>
         </field>
     </record>
 
