@@ -20,7 +20,6 @@
                     <group invisible="not has_substages">
                         <field name="sub_stage_id" 
                                options="{'no_create': True}" 
-                               required="has_substages"
                                placeholder="Select a substage..."/>
                     </group>
                 </sheet>

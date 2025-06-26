@@ -40,6 +40,20 @@ class CrmLeadSubstageWizard(models.TransientModel):
     def action_apply(self):
         """Apply the selected substage to the lead/opportunity"""
         self.ensure_one()
+        
+        # Make the substage required if there are multiple substages
+        if self.has_substages and not self.sub_stage_id:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Substage Required'),
+                    'message': _('Please select a substage for the current stage.'),
+                    'sticky': False,
+                    'type': 'warning',
+                }
+            }
+            
         if self.lead_id and self.stage_id:
             vals = {'stage_id': self.stage_id.id}
             if self.sub_stage_id:

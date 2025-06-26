@@ -11,13 +11,12 @@
             <xpath expr="//group[1]//field[@name='team_id']" position="after">
                 <field name="sub_stage_id" 
                        options="{'no_create': True}"
-                       invisible="stage_id == False"
                        domain="[('stage_id', '=', stage_id), ('active', '=', True)]"/>
                 <button name="action_open_substage_wizard" 
                         string="Select Substage"
                         type="object" 
                         class="oe_link" 
-                        attrs="{'invisible': [('stage_id', '=', False)]}"
+                        invisible="not stage_id"
                         help="Open a wizard to select the substage for the current stage"/>
             </xpath>
             
@@ -27,7 +26,7 @@
                         string="Select Substage" 
                         type="object" 
                         class="oe_inline ms-2 btn-sm btn-secondary" 
-                        attrs="{'invisible': [('stage_id', '=', False)]}"
+                        invisible="not stage_id"
                         help="Select or change the substage"/>
             </xpath>
         </field>
