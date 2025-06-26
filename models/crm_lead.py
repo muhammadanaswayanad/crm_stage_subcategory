@@ -1,5 +1,8 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class CrmLead(models.Model):
@@ -24,20 +27,27 @@ class CrmLead(models.Model):
             ('active', '=', True)
         ])
         
-        # Only open wizard if there are multiple substages available
-        if subcategories > 1:
-            return {
+        # Add detailed logging
+        _logger.info(f"action_open_substage_wizard called with stage_id={target_stage_id}, found {subcategories} subcategories")
+        
+        # Only open wizard if there are substages available (any substage is worth showing)
+        if subcategories >= 1:
+            action = {
                 'name': _('Select Substage'),
                 'type': 'ir.actions.act_window',
                 'res_model': 'crm.lead.substage.wizard',
                 'view_mode': 'form',
+                'view_id': self.env.ref('crm_stage_subcategory.crm_lead_substage_wizard_view_form').id,
                 'target': 'new',
                 'context': {
                     'default_lead_id': self.id,
                     'default_stage_id': target_stage_id,
                 }
             }
+            _logger.info(f"Returning wizard action: {action}")
+            return action
         
+        _logger.info("Not enough substages found, returning False")
         return False
 
     @api.constrains('stage_id', 'sub_stage_id')
@@ -120,20 +130,25 @@ class CrmLead(models.Model):
                 ('active', '=', True)
             ])
             
-            # If there are multiple substages and this isn't coming from our wizard,
+            _logger.info(f"Write method intercepted stage change to {new_stage_id}, found {substages_count} substages")
+            
+            # If there are any substages and this isn't coming from our wizard,
             # we should intercept the stage change and open the wizard
-            if substages_count > 1 and self.env.context.get('from_substage_wizard') != True:
+            if substages_count >= 1 and not self.env.context.get('from_substage_wizard'):
                 # We need to handle one record at a time for the wizard
                 if len(self) == 1:
+                    _logger.info(f"Opening substage wizard for lead {self.id} and stage {new_stage_id}")
                     # Store the value to be set in the wizard
                     action = self.action_open_substage_wizard(new_stage_id)
                     if action:
+                        _logger.info(f"Got wizard action, proceeding with partial write and returning action")
                         # Don't update the stage yet - will be done by the wizard
-                        vals.pop('stage_id')
+                        stage_val = vals.pop('stage_id')
                         # First perform the write without stage_id
-                        result = super().write(vals)
+                        super().write(vals)
                         # Return the wizard action
                         return action
         
         # Default behavior - perform the write normally
+        _logger.info(f"Proceeding with normal write: {vals}")
         return super().write(vals)

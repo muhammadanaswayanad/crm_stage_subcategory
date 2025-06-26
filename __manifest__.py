@@ -1,6 +1,6 @@
 {
     'name': 'CRM Stage Subcategory',
-    'version': '17.0.1.5.0',
+    'version': '17.0.1.7.0',
     'category': 'Sales/CRM',
     'summary': 'Add subcategories to CRM stages',
     'description': """
@@ -16,14 +16,14 @@
     'website': '',
     'depends': ['crm', 'web'],
     'data': [
-        'wizards/crm_lead_substage_wizard_views.xml',
         'security/ir.model.access.csv',
+        'wizards/crm_lead_substage_wizard_views.xml',
         'views/crm_stage_subcategory_views.xml',
         'views/crm_lead_views.xml',
     ],
     'assets': {
         'web.assets_backend': [
-            '/crm_stage_subcategory/static/src/js/crm_stage_subcategory.js',
+            'crm_stage_subcategory/static/src/js/crm_stage_subcategory.js',
         ],
     },
     'installable': True,
