@@ -23,7 +23,7 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'crm_stage_subcategory/static/src/js/crm_stage_subcategory.js',
+            '/crm_stage_subcategory/static/src/js/crm_stage_subcategory.js',
         ],
     },
     'installable': True,
