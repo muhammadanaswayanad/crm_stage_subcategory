@@ -11,7 +11,7 @@
                 <field name="sub_stage_id" 
                        options="{'no_create': True}"
                        attrs="{'invisible': [('stage_id', '=', False)]}"
-                       domain="[('stage_id', '=', stage_id)]"/>
+                       domain="[('stage_id', '=', stage_id), ('active', '=', True)]"/>
             </field>
         </field>
     </record>

@@ -8,10 +8,19 @@
         <field name="arch" type="xml">
             <form string="Stage Subcategory">
                 <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. Technical Review"/></h1>
+                    </div>
                     <group>
-                        <field name="name"/>
-                        <field name="stage_id"/>
-                        <field name="sequence"/>
+                        <group>
+                            <field name="stage_id" options="{'no_create': True}"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="is_default"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
                     </group>
                 </sheet>
             </form>
@@ -27,6 +36,8 @@
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="stage_id"/>
+                <field name="is_default" widget="boolean_toggle"/>
+                <field name="active" widget="boolean_toggle"/>
             </tree>
         </field>
     </record>
@@ -39,8 +50,11 @@
             <search string="Search Stage Subcategories">
                 <field name="name"/>
                 <field name="stage_id"/>
+                <filter string="Default Subcategories" name="is_default" domain="[('is_default', '=', True)]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
                 <group expand="0" string="Group By">
                     <filter string="Stage" name="group_by_stage" domain="[]" context="{'group_by': 'stage_id'}"/>
+                    <filter string="Default" name="group_by_default" domain="[]" context="{'group_by': 'is_default'}"/>
                 </group>
             </search>
         </field>
@@ -64,8 +78,8 @@
     <!-- Stage Subcategory Menu -->
     <menuitem id="menu_crm_stage_subcategory"
               name="Stage Subcategories"
-              parent="crm.menu_crm_config"
+              parent="crm.menu_crm_config_lead"
               action="action_crm_stage_subcategory"
-              sequence="20"/>
+              sequence="2"/>
 
 </odoo>
