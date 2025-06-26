@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add Substage field to CRM Lead Form View -->
+    <record id="crm_lead_view_form_inherit_subcategory" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.substage</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <field name="stage_id" position="after">
+                <field name="sub_stage_id" 
+                       options="{'no_create': True}"
+                       attrs="{'invisible': [('stage_id', '=', False)]}"
+                       domain="[('stage_id', '=', stage_id)]"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Add Substage field to CRM Lead Kanban View -->
+    <record id="crm_case_kanban_view_leads_inherit_subcategory" model="ir.ui.view">
+        <field name="name">crm.lead.kanban.inherit.substage</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_kanban_content')]//div[hasclass('oe_kanban_bottom_left')]" position="inside">
+                <span t-if="record.sub_stage_id.value" class="badge bg-info">
+                    <i class="fa fa-tag" role="img" aria-label="Substage" title="Substage"/><field name="sub_stage_id"/>
+                </span>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add Substage field to search views -->
+    <record id="view_crm_case_opportunities_filter_inherit" model="ir.ui.view">
+        <field name="name">crm.lead.search.inherit.substage</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.view_crm_case_opportunities_filter"/>
+        <field name="arch" type="xml">
+            <field name="stage_id" position="after">
+                <field name="sub_stage_id"/>
+            </field>
+            <filter name="group_stage_id" position="after">
+                <filter string="Substage" name="group_sub_stage_id" domain="[]" context="{'group_by': 'sub_stage_id'}"/>
+            </filter>
+        </field>
+    </record>
+
+    <!-- Add Substage field to CRM Lead Tree View -->
+    <record id="crm_case_tree_view_oppor_inherit_subcategory" model="ir.ui.view">
+        <field name="name">crm.lead.tree.inherit.substage</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_oppor"/>
+        <field name="arch" type="xml">
+            <field name="stage_id" position="after">
+                <field name="sub_stage_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

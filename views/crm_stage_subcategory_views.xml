@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Stage Subcategory Form View -->
+    <record id="view_crm_stage_subcategory_form" model="ir.ui.view">
+        <field name="name">crm.stage.subcategory.form</field>
+        <field name="model">crm.stage.subcategory</field>
+        <field name="arch" type="xml">
+            <form string="Stage Subcategory">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="stage_id"/>
+                        <field name="sequence"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Stage Subcategory Tree View -->
+    <record id="view_crm_stage_subcategory_tree" model="ir.ui.view">
+        <field name="name">crm.stage.subcategory.tree</field>
+        <field name="model">crm.stage.subcategory</field>
+        <field name="arch" type="xml">
+            <tree string="Stage Subcategories">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="stage_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Stage Subcategory Search View -->
+    <record id="view_crm_stage_subcategory_search" model="ir.ui.view">
+        <field name="name">crm.stage.subcategory.search</field>
+        <field name="model">crm.stage.subcategory</field>
+        <field name="arch" type="xml">
+            <search string="Search Stage Subcategories">
+                <field name="name"/>
+                <field name="stage_id"/>
+                <group expand="0" string="Group By">
+                    <filter string="Stage" name="group_by_stage" domain="[]" context="{'group_by': 'stage_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Stage Subcategory Action -->
+    <record id="action_crm_stage_subcategory" model="ir.actions.act_window">
+        <field name="name">Stage Subcategories</field>
+        <field name="res_model">crm.stage.subcategory</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new stage subcategory
+            </p>
+            <p>
+                Subcategories allow you to define more detailed stages for your CRM process.
+            </p>
+        </field>
+    </record>
+
+    <!-- Stage Subcategory Menu -->
+    <menuitem id="menu_crm_stage_subcategory"
+              name="Stage Subcategories"
+              parent="crm.menu_crm_config"
+              action="action_crm_stage_subcategory"
+              sequence="20"/>
+
+</odoo>
