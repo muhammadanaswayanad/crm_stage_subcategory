@@ -7,12 +7,13 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
-            <field name="stage_id" position="after">
+            <!-- Add the substage field to a better position in the form -->
+            <xpath expr="//group[1]//field[@name='team_id']" position="after">
                 <field name="sub_stage_id" 
                        options="{'no_create': True}"
                        invisible="stage_id == False"
                        domain="[('stage_id', '=', stage_id), ('active', '=', True)]"/>
-            </field>
+            </xpath>
         </field>
     </record>
 
@@ -22,11 +23,12 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[hasclass('oe_kanban_bottom_left')]" position="inside">
+            <!-- Add the substage field to the kanban card header, right below the title -->
+            <xpath expr="//strong[hasclass('o_kanban_record_title')]" position="after">
                 <field name="sub_stage_id" invisible="1"/>
-                <span t-if="record.sub_stage_id.value" class="badge text-bg-info">
-                    <i class="fa fa-tag me-1" role="img" aria-label="Substage" title="Substage"/><t t-esc="record.sub_stage_id.value"/>
-                </span>
+                <div t-if="record.sub_stage_id.value" class="text-muted small mt-1">
+                    <i class="fa fa-angle-double-right me-1" role="img" aria-label="Substage"/><t t-esc="record.sub_stage_id.value"/>
+                </div>
             </xpath>
         </field>
     </record>

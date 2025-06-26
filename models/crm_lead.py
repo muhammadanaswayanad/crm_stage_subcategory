@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
 
@@ -8,32 +8,43 @@ class CrmLead(models.Model):
     sub_stage_id = fields.Many2one(
         'crm.stage.subcategory', 
         string='Substage',
-        domain="[('stage_id', '=', stage_id)]",
-        tracking=True
+        domain="[('stage_id', '=', stage_id), ('active', '=', True)]",
+        tracking=True,
+        help="Additional classification within the stage"
     )
 
     @api.constrains('stage_id', 'sub_stage_id')
     def _check_substage_required(self):
         for lead in self:
-            if lead.stage_id:
-                # Check if the stage has any subcategories
+            if lead.stage_id and lead.sub_stage_id:
+                # Ensure the selected substage belongs to the selected stage
+                if lead.sub_stage_id.stage_id != lead.stage_id:
+                    raise ValidationError(
+                        f"The selected substage '{lead.sub_stage_id.name}' does not belong to "
+                        f"the current stage '{lead.stage_id.name}'. Please select a valid substage."
+                    )
+                
+            elif lead.stage_id:
+                # Check if the stage has any subcategories that are required
                 subcategories = self.env['crm.stage.subcategory'].search([
-                    ('stage_id', '=', lead.stage_id.id)
+                    ('stage_id', '=', lead.stage_id.id),
+                    ('active', '=', True)
                 ])
                 
-                if subcategories and not lead.sub_stage_id:
+                # Only show warning for stages with multiple subcategories
+                if len(subcategories) > 1 and not lead.sub_stage_id:
+                    # Get the first 5 subcategory names for display
                     subcategory_names = ", ".join([sub.name for sub in subcategories[:5]])
                     if len(subcategories) > 5:
                         subcategory_names += "..."
                     
-                    raise ValidationError(
-                        f"The substage is required for stage '{lead.stage_id.name}'. "
-                        f"Please select one of the following: {subcategory_names}"
-                    )
-                
-                # Ensure the selected substage belongs to the selected stage
-                if lead.sub_stage_id and lead.sub_stage_id.stage_id != lead.stage_id:
-                    lead.sub_stage_id = False
+                    # Use a warning message instead of validation error to make it less intrusive
+                    # This allows users to proceed even without selecting a substage
+                    lead._message_log(body=_(
+                        f"<p class='text-warning'><strong>Note:</strong> "
+                        f"Consider selecting a substage for '{lead.stage_id.name}'. "
+                        f"Available options: {subcategory_names}</p>"
+                    ))
 
     @api.onchange('stage_id')
     def _onchange_stage_id(self):
@@ -46,21 +57,25 @@ class CrmLead(models.Model):
         if self.sub_stage_id and self.sub_stage_id.stage_id != self.stage_id:
             self.sub_stage_id = False
             
+        # Get subcategories for this stage
+        subcategories = self.env['crm.stage.subcategory'].search([
+            ('stage_id', '=', self.stage_id.id),
+            ('active', '=', True)
+        ])
+        
+        # If there's only one subcategory, select it automatically
+        if len(subcategories) == 1:
+            self.sub_stage_id = subcategories.id
+            return
+            
         # Try to suggest a default subcategory
-        if not self.sub_stage_id:
+        if not self.sub_stage_id and subcategories:
             # First try to find the default marked subcategory
-            default_subcategory = self.env['crm.stage.subcategory'].search([
-                ('stage_id', '=', self.stage_id.id),
-                ('is_default', '=', True),
-                ('active', '=', True)
-            ], limit=1)
+            default_subcategory = subcategories.filtered(lambda s: s.is_default)
             
             # If no default is found, use the first one by sequence
             if not default_subcategory:
-                default_subcategory = self.env['crm.stage.subcategory'].search([
-                    ('stage_id', '=', self.stage_id.id),
-                    ('active', '=', True)
-                ], order='sequence, id', limit=1)
+                default_subcategory = subcategories[0]
             
             if default_subcategory:
                 self.sub_stage_id = default_subcategory.id
