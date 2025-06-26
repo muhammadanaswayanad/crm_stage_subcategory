@@ -40,8 +40,8 @@
             <field name="stage_id" position="after">
                 <field name="sub_stage_id"/>
             </field>
-            <filter name="group_stage_id" position="after">
-                <filter string="Substage" name="group_sub_stage_id" context="{'group_by': 'sub_stage_id'}"/>
+            <filter name="stage" position="after">
+                <filter name="group_sub_stage_id" string="Substage" context="{'group_by': 'sub_stage_id'}"/>
             </filter>
         </field>
     </record>
