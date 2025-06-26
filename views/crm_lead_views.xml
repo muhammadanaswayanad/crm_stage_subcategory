@@ -13,6 +13,12 @@
                        options="{'no_create': True}"
                        invisible="stage_id == False"
                        domain="[('stage_id', '=', stage_id), ('active', '=', True)]"/>
+                <button name="action_open_substage_wizard" 
+                        string="Select Substage"
+                        type="object" 
+                        class="oe_link" 
+                        attrs="{'invisible': [('stage_id', '=', False)]}"
+                        help="Open a wizard to select the substage for the current stage"/>
             </xpath>
             
             <!-- Add button next to stage field to open substage wizard -->

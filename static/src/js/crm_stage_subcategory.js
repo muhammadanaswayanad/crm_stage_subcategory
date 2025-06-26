@@ -5,7 +5,7 @@ import { patch } from "@web/core/utils/patch";
 import { useState } from "@odoo/owl";
 
 // Patch the KanbanRecord to intercept the stage change
-patch(KanbanRecord.prototype, {
+patch(KanbanRecord.prototype, "crm_stage_subcategory", {
     setup() {
         this._super(...arguments);
         this.state = useState({});

@@ -16,8 +16,8 @@
     'website': '',
     'depends': ['crm', 'web'],
     'data': [
-        'security/ir.model.access.csv',
         'wizards/crm_lead_substage_wizard_views.xml',
+        'security/ir.model.access.csv',
         'views/crm_stage_subcategory_views.xml',
         'views/crm_lead_views.xml',
     ],
