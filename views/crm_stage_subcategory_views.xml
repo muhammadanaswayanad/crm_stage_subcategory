@@ -80,6 +80,7 @@
               name="Stage Subcategories"
               parent="crm.menu_crm_config_lead"
               action="action_crm_stage_subcategory"
-              sequence="2"/>
+              sequence="2"
+              groups="sales_team.group_sale_manager"/>
 
 </odoo>

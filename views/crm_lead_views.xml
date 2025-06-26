@@ -10,7 +10,7 @@
             <field name="stage_id" position="after">
                 <field name="sub_stage_id" 
                        options="{'no_create': True}"
-                       attrs="{'invisible': [('stage_id', '=', False)]}"
+                       invisible="stage_id == False"
                        domain="[('stage_id', '=', stage_id), ('active', '=', True)]"/>
             </field>
         </field>
@@ -22,9 +22,10 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[hasclass('oe_kanban_content')]//div[hasclass('oe_kanban_bottom_left')]" position="inside">
-                <span t-if="record.sub_stage_id.value" class="badge bg-info">
-                    <i class="fa fa-tag" role="img" aria-label="Substage" title="Substage"/><field name="sub_stage_id"/>
+            <xpath expr="//div[hasclass('oe_kanban_bottom_left')]" position="inside">
+                <field name="sub_stage_id" invisible="1"/>
+                <span t-if="record.sub_stage_id.value" class="badge text-bg-info">
+                    <i class="fa fa-tag me-1" role="img" aria-label="Substage" title="Substage"/><t t-esc="record.sub_stage_id.value"/>
                 </span>
             </xpath>
         </field>
@@ -40,7 +41,7 @@
                 <field name="sub_stage_id"/>
             </field>
             <filter name="group_stage_id" position="after">
-                <filter string="Substage" name="group_sub_stage_id" domain="[]" context="{'group_by': 'sub_stage_id'}"/>
+                <filter string="Substage" name="group_sub_stage_id" context="{'group_by': 'sub_stage_id'}"/>
             </filter>
         </field>
     </record>
