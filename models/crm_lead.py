@@ -13,6 +13,7 @@ class CrmLead(models.Model):
         string='Substage',
         domain="[('stage_id', '=', stage_id), ('active', '=', True)]",
         tracking=True,
+        context={"show_stage_name": True},
         help="Additional classification within the stage"
     )
     

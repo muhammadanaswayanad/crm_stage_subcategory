@@ -43,3 +43,13 @@ class CrmStageSubcategory(models.Model):
             ])
             if other_defaults:
                 other_defaults.write({'is_default': False})
+
+    def name_get(self):
+        """Override name_get to show stage name in brackets for clarity"""
+        result = []
+        for record in self:
+            name = record.name
+            if self._context.get('show_stage_name') and record.stage_id:
+                name = f"{name} ({record.stage_id.name})"
+            result.append((record.id, name))
+        return result

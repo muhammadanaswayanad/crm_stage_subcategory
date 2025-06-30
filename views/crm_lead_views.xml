@@ -11,7 +11,8 @@
             <xpath expr="//group[1]//field[@name='team_id']" position="after">
                 <field name="sub_stage_id" 
                        options="{'no_create': True}"
-                       domain="[('stage_id', '=', stage_id), ('active', '=', True)]"/>
+                       domain="[('stage_id', '=', stage_id), ('active', '=', True)]"
+                       decoration-info="1"/>
                 <button name="action_open_substage_wizard" 
                         string="Select Substage"
                         type="object" 
@@ -40,10 +41,10 @@
         <field name="arch" type="xml">
             <!-- Add the substage field to the kanban card header, right below the title -->
             <xpath expr="//strong[hasclass('o_kanban_record_title')]" position="after">
-                <field name="sub_stage_id" invisible="1"/>
+                <field name="sub_stage_id"/>
                 <div t-if="record.sub_stage_id.raw_value" class="mt-1">
-                    <span class="badge rounded-pill text-bg-info">
-                        <i class="fa fa-tag me-1" role="img" aria-label="Substage"/>
+                    <span class="badge rounded-pill text-bg-info fw-normal">
+                        <i class="fa fa-bookmark me-1" role="img" aria-label="Substage"/>
                         <t t-esc="record.sub_stage_id.value"/>
                     </span>
                 </div>
