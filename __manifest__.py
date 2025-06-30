@@ -1,6 +1,6 @@
 {
     'name': 'CRM Stage Subcategory',
-    'version': '17.0.2.0.0',
+    'version': '17.0.2.0.1',
     'category': 'Sales/CRM',
     'summary': 'Add subcategories to CRM stages with visual indicators',
     'description': """

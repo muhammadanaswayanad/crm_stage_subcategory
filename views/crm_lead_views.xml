@@ -36,7 +36,7 @@
             </xpath>
 
             <!-- Add a prominent visual indicator for substages right after the status bar -->
-            <xpath expr="//div[hasclass('o_form_statusbar')]" position="after">
+            <xpath expr="//header" position="after">
                 <div class="o_substage_indicator py-2 px-3 mb-3" 
                      attrs="{'invisible': [('sub_stage_id', '=', False)]}"
                      style="background-color: #e9f5fe; border-left: 3px solid #0d6efd; border-bottom: 1px solid #d3e9fc;">
@@ -51,7 +51,7 @@
             </xpath>
             
             <!-- Add colored notification banner at the top of the form -->
-            <xpath expr="//div[hasclass('oe_title')]" position="before">
+            <xpath expr="//sheet/div[hasclass('oe_title')]" position="before">
                 <div class="alert alert-info mb-4 d-flex align-items-center" 
                      attrs="{'invisible': [('sub_stage_id', '=', False)]}" 
                      role="alert">
