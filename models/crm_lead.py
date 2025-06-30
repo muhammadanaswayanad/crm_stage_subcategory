@@ -63,16 +63,35 @@ class CrmLead(models.Model):
     @api.constrains('stage_id', 'sub_stage_id')
     def _check_substage_required(self):
         for lead in self:
+            # Only validate if we have both a stage and a substage
             if lead.stage_id and lead.sub_stage_id:
-                # Ensure the selected substage belongs to the selected stage
+                # Check if the stage and substage don't match 
                 if lead.sub_stage_id.stage_id != lead.stage_id:
-                    raise ValidationError(
-                        f"The selected substage '{lead.sub_stage_id.name}' does not belong to "
-                        f"the current stage '{lead.stage_id.name}'. Please select a valid substage."
+                    # Instead of validation error, auto-clear the substage and log a message
+                    old_substage_name = lead.sub_stage_id.name
+                    _logger.info(
+                        "Automatically clearing substage '%s' as it doesn't belong to stage '%s'",
+                        old_substage_name, lead.stage_id.name
                     )
-                
+                    
+                    # Use sudo to avoid recursion with the constraint
+                    lead.with_context(skip_substage_check=True).write({
+                        'sub_stage_id': False
+                    })
+                    
+                    # Log message to chatter
+                    lead.message_post(
+                        body=_("Substage '%s' was automatically cleared as it doesn't belong to the current stage.") % old_substage_name,
+                        subject=_("Substage Cleared")
+                    )
+            
+            # Add a suggestion for adding substage if available but not selected
             elif lead.stage_id:
-                # Check if the stage has any subcategories that are required
+                # Skip if we're in the middle of another write operation
+                if self.env.context.get('skip_substage_check'):
+                    continue
+                    
+                # Check if the stage has any subcategories that could be selected
                 subcategories = self.env['crm.stage.subcategory'].search([
                     ('stage_id', '=', lead.stage_id.id),
                     ('active', '=', True)
@@ -85,24 +104,25 @@ class CrmLead(models.Model):
                     if len(subcategories) > 5:
                         subcategory_names += "..."
                     
-                    # Use a warning message instead of validation error to make it less intrusive
-                    # This allows users to proceed even without selecting a substage
+                    # Use a warning message to suggest selecting a substage
                     lead._message_log(body=_(
-                        f"<p class='text-warning'><strong>Note:</strong> "
-                        f"Consider selecting a substage for '{lead.stage_id.name}'. "
-                        f"Available options: {subcategory_names}</p>"
-                    ))
+                        "<p class='text-warning'><strong>Note:</strong> "
+                        "Consider selecting a substage for '%s'. "
+                        "Available options: %s</p>") % (lead.stage_id.name, subcategory_names)
+                    )
 
     @api.onchange('stage_id')
     def _onchange_stage_id(self):
         """Reset substage when stage changes and suggest a default if available"""
+        # Always clear the substage when stage changes
+        previous_substage = self.sub_stage_id.name if self.sub_stage_id else False
+        self.sub_stage_id = False
+        
+        # Exit if no stage is selected
         if not self.stage_id:
-            self.sub_stage_id = False
             return
             
-        # If subcategory doesn't belong to the selected stage, reset it
-        if self.sub_stage_id and self.sub_stage_id.stage_id != self.stage_id:
-            self.sub_stage_id = False
+        _logger.info("Stage changed, looking for substages for stage_id=%s", self.stage_id.id)
             
         # Get subcategories for this stage
         subcategories = self.env['crm.stage.subcategory'].search([
@@ -110,22 +130,29 @@ class CrmLead(models.Model):
             ('active', '=', True)
         ])
         
+        _logger.info("Found %s substages for stage '%s'", 
+                    len(subcategories), self.stage_id.name)
+        
+        # If no substages exist, leave substage empty
+        if not subcategories:
+            return
+            
         # If there's only one subcategory, select it automatically
         if len(subcategories) == 1:
             self.sub_stage_id = subcategories.id
             return
             
         # Try to suggest a default subcategory
-        if not self.sub_stage_id and subcategories:
-            # First try to find the default marked subcategory
-            default_subcategory = subcategories.filtered(lambda s: s.is_default)
-            
-            # If no default is found, use the first one by sequence
-            if not default_subcategory:
-                default_subcategory = subcategories[0]
-            
-            if default_subcategory:
-                self.sub_stage_id = default_subcategory.id
+        # First try to find the default marked subcategory
+        default_subcategory = subcategories.filtered(lambda s: s.is_default)
+        
+        # If no default is found, use the first one by sequence
+        if default_subcategory:
+            self.sub_stage_id = default_subcategory[0].id
+            _logger.info("Set default substage: %s", default_subcategory[0].name)
+        else:
+            # Don't automatically set substage if there are multiple options without a default
+            _logger.info("Multiple substages available but no default set, leaving empty")
                 
     def write(self, vals):
         """Override write to intercept stage changes and open substage wizard if needed"""

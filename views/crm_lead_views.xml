@@ -38,11 +38,20 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
         <field name="arch" type="xml">
-            <!-- Add the substage field to the kanban card header, right below the title -->
-            <xpath expr="//strong[hasclass('o_kanban_record_title')]" position="after">
-                <field name="sub_stage_id" invisible="1"/>
-                <div t-if="record.sub_stage_id.value" class="text-muted small mt-1">
-                    <i class="fa fa-angle-double-right me-1" role="img" aria-label="Substage"/><t t-esc="record.sub_stage_id.value"/>
+            <!-- Add the substage field as a visible badge in the kanban card -->
+            <xpath expr="//div[hasclass('o_kanban_record_top')]" position="after">
+                <div t-if="record.sub_stage_id.raw_value" class="o_kanban_record_subtitle mt-1 mb-1">
+                    <span class="badge rounded-pill text-bg-info">
+                        <i class="fa fa-tag me-1" role="img" aria-label="Substage"/>
+                        <field name="sub_stage_id"/>
+                    </span>
+                </div>
+            </xpath>
+            
+            <!-- Also add it to the tooltip -->
+            <xpath expr="//div[hasclass('oe_kanban_details')]" position="inside">
+                <div t-if="record.sub_stage_id.raw_value" class="mt-1">
+                    <strong>Substage: </strong><field name="sub_stage_id"/>
                 </div>
             </xpath>
         </field>
