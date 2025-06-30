@@ -13,11 +13,11 @@
                     <field name="available_substage_ids" invisible="1"/>
                     
                     <div class="alert alert-info text-center" role="alert" 
-                         attrs="{'invisible': [('has_substages', '=', True)]}">
+                         invisible="has_substages">
                         <p>The selected stage doesn't have any subcategories.</p>
                     </div>
                     
-                    <group attrs="{'invisible': [('has_substages', '=', False)]}">
+                    <group invisible="not has_substages">
                         <field name="sub_stage_id" 
                                options="{'no_create': True}" 
                                placeholder="Select a substage..."/>

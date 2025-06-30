@@ -16,7 +16,7 @@
                         string="Select Substage"
                         type="object" 
                         class="btn btn-link px-0" 
-                        attrs="{'invisible': [('stage_id', '=', False)]}"
+                        invisible="not stage_id"
                         help="Open a wizard to select the substage for the current stage"/>
             </xpath>
             
@@ -26,7 +26,7 @@
                         string="Select Substage" 
                         type="object" 
                         class="btn btn-primary btn-sm ms-2" 
-                        attrs="{'invisible': [('stage_id', '=', False)]}"
+                        invisible="not stage_id"
                         help="Select or change the substage"/>
             </xpath>
         </field>
