@@ -103,10 +103,12 @@ class CrmLead(models.Model):
                         'sub_stage_id': False
                     })
                     
-                    # Log message to chatter
+                    # Log message to chatter with HTML formatting
                     lead.message_post(
-                        body=_("Substage '%s' was automatically cleared as it doesn't belong to the current stage.") % old_substage_name,
-                        subject=_("Substage Cleared")
+                        body=f"<p>{_('Substage')} '<strong>{old_substage_name}</strong>' {_('was automatically cleared as it doesn\'t belong to the current stage.')}</p>",
+                        subject=_("Substage Cleared"),
+                        message_type='notification',
+                        subtype_id=self.env.ref('mail.mt_note').id
                     )
             
             # Add a suggestion for adding substage if available but not selected
@@ -131,8 +133,8 @@ class CrmLead(models.Model):
                     # Use a warning message to suggest selecting a substage
                     lead._message_log(body=_(
                         "<p class='text-warning'><strong>Note:</strong> "
-                        "Consider selecting a substage for '%s'. "
-                        "Available options: %s</p>") % (lead.stage_id.name, subcategory_names)
+                        "Consider selecting a substage for '<strong>%s</strong>'. "
+                        "Available options: <em>%s</em></p>") % (lead.stage_id.name, subcategory_names)
                     )
 
     @api.onchange('stage_id')

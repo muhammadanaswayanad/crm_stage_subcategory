@@ -87,13 +87,15 @@ class CrmLeadSubstageWizard(models.TransientModel):
                 skip_substage_check=True  # Skip the constraint check
             ).write(vals)
             
-            # Add a message to the chatter
+            # Add a message to the chatter with HTML formatting
             stage_name = self.lead_id.stage_id.name
-            substage_name = self.sub_stage_id.name if self.sub_stage_id else "None"
-            message = _("Substage set to '%s' for stage '%s'") % (substage_name, stage_name)
+            substage_name = self.sub_stage_id.name if self.sub_stage_id else _("None")
+            
             self.lead_id.message_post(
-                body=message,
-                subject=_("Substage Updated")
+                body=f"<p>{_('Substage set to')} '<strong>{substage_name}</strong>' {_('for stage')} '<strong>{stage_name}</strong>'</p>",
+                subject=_("Substage Updated"),
+                message_type='notification',
+                subtype_id=self.env.ref('mail.mt_note').id
             )
         
         _logger.info("[SUBSTAGE_WIZARD] Closing wizard")
