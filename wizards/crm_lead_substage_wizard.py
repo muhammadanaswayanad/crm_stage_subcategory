@@ -1,4 +1,7 @@
 from odoo import api, fields, models, _
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class CrmLeadSubstageWizard(models.TransientModel):
@@ -30,28 +33,36 @@ class CrmLeadSubstageWizard(models.TransientModel):
             wizard.has_substages = bool(substages)
             
             # Log for debugging
-            _logger = self.env.cr.logger
-            _logger.info(f"[SUBSTAGE_WIZARD] Computing available substages for stage_id={wizard.stage_id.id}, found {len(substages)} substages")
+            _logger.info("[SUBSTAGE_WIZARD] Computing available substages for stage_id=%s, found %s substages", 
+                         wizard.stage_id.id if wizard.stage_id else 'None', 
+                         len(substages))
             
             # Set default substage if available
             if substages and not wizard.sub_stage_id:
                 default_substage = substages.filtered(lambda s: s.is_default)
                 if default_substage:
-                    _logger.info(f"[SUBSTAGE_WIZARD] Setting default substage: {default_substage[0].name}")
+                    _logger.info("[SUBSTAGE_WIZARD] Setting default substage: %s", 
+                                default_substage[0].name)
                     wizard.sub_stage_id = default_substage[0].id
                 elif substages:
-                    _logger.info(f"[SUBSTAGE_WIZARD] Setting first substage: {substages[0].name}")
+                    _logger.info("[SUBSTAGE_WIZARD] Setting first substage: %s", 
+                                substages[0].name)
                     wizard.sub_stage_id = substages[0].id
 
     def action_apply(self):
         """Apply the selected substage to the lead/opportunity"""
         self.ensure_one()
-        _logger = self.env.cr.logger
-        _logger.info(f"[SUBSTAGE_WIZARD] Apply button clicked. Lead: {self.lead_id.id}, Stage: {self.stage_id.id}, Substage: {self.sub_stage_id.id if self.sub_stage_id else 'None'}")
+        
+        lead_id = self.lead_id.id if self.lead_id else 'None'
+        stage_id = self.stage_id.id if self.stage_id else 'None'
+        substage_id = self.sub_stage_id.id if self.sub_stage_id else 'None'
+        
+        _logger.info("[SUBSTAGE_WIZARD] Apply button clicked. Lead: %s, Stage: %s, Substage: %s", 
+                    lead_id, stage_id, substage_id)
         
         # Make the substage required if there are multiple substages
         if self.has_substages and not self.sub_stage_id:
-            _logger.warning(f"[SUBSTAGE_WIZARD] No substage selected but required")
+            _logger.warning("[SUBSTAGE_WIZARD] No substage selected but required")
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
@@ -70,7 +81,7 @@ class CrmLeadSubstageWizard(models.TransientModel):
             else:
                 vals['sub_stage_id'] = False  # Clear substage if none selected
             
-            _logger.info(f"[SUBSTAGE_WIZARD] Writing values to lead: {vals}")
+            _logger.info("[SUBSTAGE_WIZARD] Writing values to lead: %s", vals)
             
             # Use context to avoid recursion when writing stage_id
             self.lead_id.with_context(
@@ -81,10 +92,11 @@ class CrmLeadSubstageWizard(models.TransientModel):
             # Add a message to the chatter
             stage_name = self.stage_id.name
             substage_name = self.sub_stage_id.name if self.sub_stage_id else "None"
+            message = _("Stage updated to '%s' with substage '%s'") % (stage_name, substage_name)
             self.lead_id.message_post(
-                body=_(f"Stage updated to '{stage_name}' with substage '{substage_name}'"),
+                body=message,
                 subject=_("Substage Updated")
             )
         
-        _logger.info(f"[SUBSTAGE_WIZARD] Closing wizard")
+        _logger.info("[SUBSTAGE_WIZARD] Closing wizard")
         return {'type': 'ir.actions.act_window_close'}

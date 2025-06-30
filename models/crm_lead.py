@@ -21,7 +21,8 @@ class CrmLead(models.Model):
         self.ensure_one()
         target_stage_id = stage_id or self.stage_id.id
         
-        _logger.info(f"[SUBSTAGE] Button clicked! action_open_substage_wizard called for lead: {self.id}, stage_id={target_stage_id}")
+        _logger.info("[SUBSTAGE] Button clicked! action_open_substage_wizard called for lead: %s, stage_id=%s",
+                    self.id, target_stage_id)
         
         # Check if the target stage has subcategories
         subcategories = self.env['crm.stage.subcategory'].search([
@@ -30,7 +31,8 @@ class CrmLead(models.Model):
         ])
         
         # Add detailed logging
-        _logger.info(f"[SUBSTAGE] Found {len(subcategories)} subcategories: {subcategories.mapped('name')}")
+        _logger.info("[SUBSTAGE] Found %s subcategories: %s",
+                    len(subcategories), subcategories.mapped('name'))
         
         # Always show the wizard, even if there are no substages
         action = {
@@ -51,11 +53,11 @@ class CrmLead(models.Model):
             view = self.env.ref('crm_stage_subcategory.crm_lead_substage_wizard_view_form')
             if view:
                 action['view_id'] = view.id
-                _logger.info(f"[SUBSTAGE] Using view_id: {view.id}")
+                _logger.info("[SUBSTAGE] Using view_id: %s", view.id)
         except Exception as e:
-            _logger.warning(f"[SUBSTAGE] Could not find view: {str(e)}")
+            _logger.warning("[SUBSTAGE] Could not find view: %s", str(e))
         
-        _logger.info(f"[SUBSTAGE] Returning wizard action: {action}")
+        _logger.info("[SUBSTAGE] Returning wizard action: %s", action)
         return action
 
     @api.constrains('stage_id', 'sub_stage_id')
@@ -138,25 +140,27 @@ class CrmLead(models.Model):
                 ('active', '=', True)
             ])
             
-            _logger.info(f"Write method intercepted stage change to {new_stage_id}, found {substages_count} substages")
+            _logger.info("Write method intercepted stage change to %s, found %s substages",
+                         new_stage_id, substages_count)
             
             # If there are any substages and this isn't coming from our wizard,
             # we should intercept the stage change and open the wizard
             if substages_count >= 1 and not self.env.context.get('from_substage_wizard'):
                 # We need to handle one record at a time for the wizard
                 if len(self) == 1:
-                    _logger.info(f"Opening substage wizard for lead {self.id} and stage {new_stage_id}")
+                    _logger.info("Opening substage wizard for lead %s and stage %s",
+                                self.id, new_stage_id)
                     # Store the value to be set in the wizard
                     action = self.action_open_substage_wizard(new_stage_id)
                     if action:
-                        _logger.info(f"Got wizard action, proceeding with partial write and returning action")
+                        _logger.info("Got wizard action, proceeding with partial write and returning action")
                         # Don't update the stage yet - will be done by the wizard
-                        stage_val = vals.pop('stage_id')
+                        vals.pop('stage_id')
                         # First perform the write without stage_id
                         super().write(vals)
                         # Return the wizard action
                         return action
         
         # Default behavior - perform the write normally
-        _logger.info(f"Proceeding with normal write: {vals}")
+        _logger.info("Proceeding with normal write: %s", vals)
         return super().write(vals)

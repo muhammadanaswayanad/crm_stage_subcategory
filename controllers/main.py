@@ -158,9 +158,7 @@ class CrmStageSubcategoryController(http.Controller):
                     <p>Both lead_id and stage_id must be integers.</p>
                     <p><a href="/crm_stage_subcategory/debug">Back to debug page</a></p>
                 </body></html>
-            """
-            
-        _logger.info(f"Debug endpoint called for lead_id={lead_id}, stage_id={stage_id}")
+            """            _logger.info("Debug endpoint called for lead_id=%s, stage_id=%s", lead_id, stage_id)
         
         lead = request.env['crm.lead'].browse(lead_id)
         if not lead.exists():
