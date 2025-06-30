@@ -22,6 +22,7 @@
                             class="btn btn-link px-0 ms-2" 
                             invisible="not stage_id"
                             help="Open a wizard to select the substage for the current stage"/>
+                </div>
             </xpath>
             
             <!-- Add button next to stage field to open substage wizard -->
