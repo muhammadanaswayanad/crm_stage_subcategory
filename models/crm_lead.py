@@ -34,14 +34,39 @@ class CrmLead(models.Model):
         _logger.info("[SUBSTAGE] Found %s subcategories: %s",
                     len(subcategories), subcategories.mapped('name'))
         
-        # Always show the wizard, even if there are no substages
+        # Special case: if there's exactly one substage, set it directly and don't show wizard
+        if len(subcategories) == 1 and not self.env.context.get('force_substage_wizard'):
+            _logger.info("[SUBSTAGE] Only one substage found (%s), setting it directly without wizard",
+                        subcategories.name)
+            self.with_context(
+                from_substage_wizard=True, 
+                skip_substage_wizard=True,
+                skip_substage_check=True  # Skip the constraint check
+            ).write({'sub_stage_id': subcategories.id})
+            
+            # Show a notification
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Substage Set'),
+                    'message': _("Substage '%s' has been automatically selected") % subcategories.name,
+                    'sticky': False,
+                    'type': 'success',
+                }
+            }
+        
+        # If there are multiple substages or if forced, show the wizard
         action = {
             'name': _('Select Substage'),
             'type': 'ir.actions.act_window',
             'res_model': 'crm.lead.substage.wizard',
             'view_mode': 'form',
             'target': 'new',
-            'flags': {'headless': False},  # Ensure dialog is shown with header
+            'flags': {
+                'headless': False,  # Ensure dialog is shown with header
+                'clear_breadcrumbs': True,  # Don't add to breadcrumbs
+            },
             'context': {
                 'default_lead_id': self.id,
                 'default_stage_id': target_stage_id,
@@ -53,7 +78,6 @@ class CrmLead(models.Model):
             view = self.env.ref('crm_stage_subcategory.crm_lead_substage_wizard_view_form')
             if view:
                 action['view_id'] = view.id
-                _logger.info("[SUBSTAGE] Using view_id: %s", view.id)
         except Exception as e:
             _logger.warning("[SUBSTAGE] Could not find view: %s", str(e))
         
@@ -160,33 +184,49 @@ class CrmLead(models.Model):
         if 'stage_id' in vals and self and not self.env.context.get('skip_substage_wizard'):
             # Only process if there's a stage change and substage wizard should not be skipped
             new_stage_id = vals['stage_id']
+            old_stage_id = self.stage_id.id if self.stage_id else False
+            
+            # Skip if there's no actual change in stage
+            if new_stage_id == old_stage_id:
+                _logger.info("Stage not changing, proceeding with normal write")
+                return super().write(vals)
+                
+            _logger.info("Stage changing from %s to %s", old_stage_id, new_stage_id)
             
             # Check if the target stage has substages
-            substages_count = self.env['crm.stage.subcategory'].search_count([
+            substages = self.env['crm.stage.subcategory'].search([
                 ('stage_id', '=', new_stage_id),
                 ('active', '=', True)
             ])
             
             _logger.info("Write method intercepted stage change to %s, found %s substages",
-                         new_stage_id, substages_count)
+                         new_stage_id, len(substages))
             
-            # If there are any substages and this isn't coming from our wizard,
+            # Always clear the substage when changing stage (regardless of wizard)
+            if 'sub_stage_id' not in vals:
+                vals['sub_stage_id'] = False
+            
+            # If there are substages and this isn't coming from our wizard,
             # we should intercept the stage change and open the wizard
-            if substages_count >= 1 and not self.env.context.get('from_substage_wizard'):
+            if substages and not self.env.context.get('from_substage_wizard'):
+                # Handle special case: if there's exactly one substage, set it directly
+                if len(substages) == 1:
+                    _logger.info("Only one substage available (%s), setting it automatically", 
+                                substages.name)
+                    vals['sub_stage_id'] = substages.id
+                    return super().write(vals)
+                
                 # We need to handle one record at a time for the wizard
                 if len(self) == 1:
                     _logger.info("Opening substage wizard for lead %s and stage %s",
                                 self.id, new_stage_id)
-                    # Store the value to be set in the wizard
-                    action = self.action_open_substage_wizard(new_stage_id)
-                    if action:
-                        _logger.info("Got wizard action, proceeding with partial write and returning action")
-                        # Don't update the stage yet - will be done by the wizard
-                        vals.pop('stage_id')
-                        # First perform the write without stage_id
-                        super().write(vals)
-                        # Return the wizard action
-                        return action
+                    
+                    # First perform the write WITH the stage_id to actually change the stage
+                    # The form view will stay open while the wizard pops up
+                    super().write(vals)
+                    
+                    # Open the wizard but don't block the stage change
+                    return self.action_open_substage_wizard(new_stage_id)
         
         # Default behavior - perform the write normally
         _logger.info("Proceeding with normal write: %s", vals)

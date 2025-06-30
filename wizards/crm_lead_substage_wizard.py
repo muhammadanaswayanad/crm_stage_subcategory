@@ -74,25 +74,23 @@ class CrmLeadSubstageWizard(models.TransientModel):
                 }
             }
             
-        if self.lead_id and self.stage_id:
-            vals = {'stage_id': self.stage_id.id}
-            if self.sub_stage_id:
-                vals['sub_stage_id'] = self.sub_stage_id.id
-            else:
-                vals['sub_stage_id'] = False  # Clear substage if none selected
+        if self.lead_id:
+            # Only update the substage field, as the stage was already changed
+            vals = {'sub_stage_id': self.sub_stage_id.id if self.sub_stage_id else False}
             
             _logger.info("[SUBSTAGE_WIZARD] Writing values to lead: %s", vals)
             
-            # Use context to avoid recursion when writing stage_id
+            # Use context to avoid recursion
             self.lead_id.with_context(
                 from_substage_wizard=True, 
-                skip_substage_wizard=True
+                skip_substage_wizard=True,
+                skip_substage_check=True  # Skip the constraint check
             ).write(vals)
             
             # Add a message to the chatter
-            stage_name = self.stage_id.name
+            stage_name = self.lead_id.stage_id.name
             substage_name = self.sub_stage_id.name if self.sub_stage_id else "None"
-            message = _("Stage updated to '%s' with substage '%s'") % (stage_name, substage_name)
+            message = _("Substage set to '%s' for stage '%s'") % (substage_name, stage_name)
             self.lead_id.message_post(
                 body=message,
                 subject=_("Substage Updated")
