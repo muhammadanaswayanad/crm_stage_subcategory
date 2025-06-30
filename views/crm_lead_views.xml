@@ -34,6 +34,36 @@
                         invisible="not stage_id"
                         help="Select or change the substage"/>
             </xpath>
+
+            <!-- Add a prominent visual indicator for substages right after the status bar -->
+            <xpath expr="//div[hasclass('o_form_statusbar')]" position="after">
+                <div class="o_substage_indicator py-2 px-3 mb-3" 
+                     attrs="{'invisible': [('sub_stage_id', '=', False)]}"
+                     style="background-color: #e9f5fe; border-left: 3px solid #0d6efd; border-bottom: 1px solid #d3e9fc;">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-bookmark me-2 text-primary" role="img" aria-label="Substage"/>
+                        <span class="fw-bold text-primary">Substage:</span>
+                        <span class="ms-2 badge rounded-pill text-bg-primary">
+                            <field name="sub_stage_id" readonly="1" nolabel="1"/>
+                        </span>
+                    </div>
+                </div>
+            </xpath>
+            
+            <!-- Add colored notification banner at the top of the form -->
+            <xpath expr="//div[hasclass('oe_title')]" position="before">
+                <div class="alert alert-info mb-4 d-flex align-items-center" 
+                     attrs="{'invisible': [('sub_stage_id', '=', False)]}" 
+                     role="alert">
+                    <i class="fa fa-info-circle me-2" role="img" aria-label="Info"/>
+                    <div>
+                        <strong>Current substage:</strong> 
+                        <span class="badge rounded-pill bg-primary text-white ms-2">
+                            <field name="substage_display" readonly="1" nolabel="1"/>
+                        </span>
+                    </div>
+                </div>
+            </xpath>
         </field>
     </record>
 

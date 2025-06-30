@@ -1,8 +1,8 @@
 {
     'name': 'CRM Stage Subcategory',
-    'version': '17.0.1.14.0',
+    'version': '17.0.2.0.0',
     'category': 'Sales/CRM',
-    'summary': 'Add subcategories to CRM stages',
+    'summary': 'Add subcategories to CRM stages with visual indicators',
     'description': """
         This module allows you to create subcategories for CRM stages.
         It adds a new model for subcategories and extends the CRM lead model with a
@@ -10,7 +10,8 @@
         Subcategories can be archived and marked as default for a stage.
         
         The module respects the standard Odoo UI and enhances it with additional categorization
-        capabilities within each stage.
+        capabilities within each stage. Visual indicators in form and kanban views make it
+        easy to identify the current substage of any opportunity.
     """,
     'author': 'Custom Development',
     'website': '',
