@@ -15,8 +15,8 @@
                 <button name="action_open_substage_wizard" 
                         string="Select Substage"
                         type="object" 
-                        class="oe_link" 
-                        invisible="not stage_id"
+                        class="btn btn-link px-0" 
+                        attrs="{'invisible': [('stage_id', '=', False)]}"
                         help="Open a wizard to select the substage for the current stage"/>
             </xpath>
             
@@ -25,8 +25,8 @@
                 <button name="action_open_substage_wizard" 
                         string="Select Substage" 
                         type="object" 
-                        class="oe_inline ms-2 btn-sm btn-secondary" 
-                        invisible="not stage_id"
+                        class="btn btn-primary btn-sm ms-2" 
+                        attrs="{'invisible': [('stage_id', '=', False)]}"
                         help="Select or change the substage"/>
             </xpath>
         </field>

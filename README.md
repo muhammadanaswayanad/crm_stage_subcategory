@@ -12,6 +12,7 @@ This Odoo 17 module adds subcategories to CRM stages to allow for more granular 
 - **Auto-Selection**: Automatically suggests the default subcategory when changing stages
 - **User Interface Integration**: Subcategories visible in list, kanban and form views
 - **Archiving**: Ability to archive subcategories that are no longer needed
+- **Debugging Tools**: Built-in debugging interface for administrators
 
 ## Configuration
 
@@ -28,6 +29,14 @@ This Odoo 17 module adds subcategories to CRM stages to allow for more granular 
 - Extends `crm.lead` with a `sub_stage_id` field
 - Uses JavaScript to intercept kanban drag-and-drop events
 - Overrides write method to show wizard on stage changes
+
+## Debugging
+
+The module includes a debugging interface for administrators:
+
+1. Access the debug interface at `/crm_stage_subcategory/debug`
+2. You can test the substage wizard functionality for any lead and stage combination
+3. Detailed logs are available in the Odoo server log with the `[SUBSTAGE]` prefix
 - Supports active/inactive status and default selection
 - Provides helpful error messages with available options
 

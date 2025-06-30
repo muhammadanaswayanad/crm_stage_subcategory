@@ -29,20 +29,29 @@ class CrmLeadSubstageWizard(models.TransientModel):
             wizard.available_substage_ids = substages
             wizard.has_substages = bool(substages)
             
+            # Log for debugging
+            _logger = self.env.cr.logger
+            _logger.info(f"[SUBSTAGE_WIZARD] Computing available substages for stage_id={wizard.stage_id.id}, found {len(substages)} substages")
+            
             # Set default substage if available
             if substages and not wizard.sub_stage_id:
                 default_substage = substages.filtered(lambda s: s.is_default)
                 if default_substage:
+                    _logger.info(f"[SUBSTAGE_WIZARD] Setting default substage: {default_substage[0].name}")
                     wizard.sub_stage_id = default_substage[0].id
-                else:
+                elif substages:
+                    _logger.info(f"[SUBSTAGE_WIZARD] Setting first substage: {substages[0].name}")
                     wizard.sub_stage_id = substages[0].id
 
     def action_apply(self):
         """Apply the selected substage to the lead/opportunity"""
         self.ensure_one()
+        _logger = self.env.cr.logger
+        _logger.info(f"[SUBSTAGE_WIZARD] Apply button clicked. Lead: {self.lead_id.id}, Stage: {self.stage_id.id}, Substage: {self.sub_stage_id.id if self.sub_stage_id else 'None'}")
         
         # Make the substage required if there are multiple substages
         if self.has_substages and not self.sub_stage_id:
+            _logger.warning(f"[SUBSTAGE_WIZARD] No substage selected but required")
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
@@ -58,11 +67,24 @@ class CrmLeadSubstageWizard(models.TransientModel):
             vals = {'stage_id': self.stage_id.id}
             if self.sub_stage_id:
                 vals['sub_stage_id'] = self.sub_stage_id.id
+            else:
+                vals['sub_stage_id'] = False  # Clear substage if none selected
+            
+            _logger.info(f"[SUBSTAGE_WIZARD] Writing values to lead: {vals}")
             
             # Use context to avoid recursion when writing stage_id
             self.lead_id.with_context(
                 from_substage_wizard=True, 
                 skip_substage_wizard=True
             ).write(vals)
+            
+            # Add a message to the chatter
+            stage_name = self.stage_id.name
+            substage_name = self.sub_stage_id.name if self.sub_stage_id else "None"
+            self.lead_id.message_post(
+                body=_(f"Stage updated to '{stage_name}' with substage '{substage_name}'"),
+                subject=_("Substage Updated")
+            )
         
+        _logger.info(f"[SUBSTAGE_WIZARD] Closing wizard")
         return {'type': 'ir.actions.act_window_close'}

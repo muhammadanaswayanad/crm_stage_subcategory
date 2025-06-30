@@ -21,34 +21,42 @@ class CrmLead(models.Model):
         self.ensure_one()
         target_stage_id = stage_id or self.stage_id.id
         
+        _logger.info(f"[SUBSTAGE] Button clicked! action_open_substage_wizard called for lead: {self.id}, stage_id={target_stage_id}")
+        
         # Check if the target stage has subcategories
-        subcategories = self.env['crm.stage.subcategory'].search_count([
+        subcategories = self.env['crm.stage.subcategory'].search([
             ('stage_id', '=', target_stage_id),
             ('active', '=', True)
         ])
         
         # Add detailed logging
-        _logger.info(f"action_open_substage_wizard called with stage_id={target_stage_id}, found {subcategories} subcategories")
+        _logger.info(f"[SUBSTAGE] Found {len(subcategories)} subcategories: {subcategories.mapped('name')}")
         
-        # Only open wizard if there are substages available (any substage is worth showing)
-        if subcategories >= 1:
-            action = {
-                'name': _('Select Substage'),
-                'type': 'ir.actions.act_window',
-                'res_model': 'crm.lead.substage.wizard',
-                'view_mode': 'form',
-                'view_id': self.env.ref('crm_stage_subcategory.crm_lead_substage_wizard_view_form').id,
-                'target': 'new',
-                'context': {
-                    'default_lead_id': self.id,
-                    'default_stage_id': target_stage_id,
-                }
+        # Always show the wizard, even if there are no substages
+        action = {
+            'name': _('Select Substage'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'crm.lead.substage.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'flags': {'headless': False},  # Ensure dialog is shown with header
+            'context': {
+                'default_lead_id': self.id,
+                'default_stage_id': target_stage_id,
             }
-            _logger.info(f"Returning wizard action: {action}")
-            return action
+        }
         
-        _logger.info("Not enough substages found, returning False")
-        return False
+        # Try to get the view ID but don't fail if not found
+        try:
+            view = self.env.ref('crm_stage_subcategory.crm_lead_substage_wizard_view_form')
+            if view:
+                action['view_id'] = view.id
+                _logger.info(f"[SUBSTAGE] Using view_id: {view.id}")
+        except Exception as e:
+            _logger.warning(f"[SUBSTAGE] Could not find view: {str(e)}")
+        
+        _logger.info(f"[SUBSTAGE] Returning wizard action: {action}")
+        return action
 
     @api.constrains('stage_id', 'sub_stage_id')
     def _check_substage_required(self):
