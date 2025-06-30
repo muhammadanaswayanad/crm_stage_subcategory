@@ -7,18 +7,21 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
-            <!-- Add the substage field to a better position in the form -->
+            <!-- Add the substage field with a label to the form -->
             <xpath expr="//group[1]//field[@name='team_id']" position="after">
-                <field name="sub_stage_id" 
-                       options="{'no_create': True}"
-                       domain="[('stage_id', '=', stage_id), ('active', '=', True)]"
-                       decoration-info="1"/>
-                <button name="action_open_substage_wizard" 
-                        string="Select Substage"
-                        type="object" 
-                        class="btn btn-link px-0" 
-                        invisible="not stage_id"
-                        help="Open a wizard to select the substage for the current stage"/>
+                <label for="sub_stage_id" string="Substage" class="fw-bold"/>
+                <div class="d-flex align-items-center">
+                    <field name="sub_stage_id" 
+                           options="{'no_create': True}"
+                           domain="[('stage_id', '=', stage_id), ('active', '=', True)]"
+                           decoration-info="1"
+                           class="text-primary fw-medium"/>
+                    <button name="action_open_substage_wizard" 
+                            string="Select Substage"
+                            type="object" 
+                            class="btn btn-link px-0 ms-2" 
+                            invisible="not stage_id"
+                            help="Open a wizard to select the substage for the current stage"/>
             </xpath>
             
             <!-- Add button next to stage field to open substage wizard -->
@@ -39,13 +42,13 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
         <field name="arch" type="xml">
-            <!-- Add the substage field to the kanban card header, right below the title -->
+            <!-- Add the substage field as a badge only, below the title -->
             <xpath expr="//strong[hasclass('o_kanban_record_title')]" position="after">
-                <field name="sub_stage_id"/>
-                <div t-if="record.sub_stage_id.raw_value" class="mt-1">
+                <field name="substage_display" invisible="1"/>
+                <div t-if="record.substage_display.raw_value" class="mt-2">
                     <span class="badge rounded-pill text-bg-info fw-normal">
                         <i class="fa fa-bookmark me-1" role="img" aria-label="Substage"/>
-                        <t t-esc="record.sub_stage_id.value"/>
+                        <t t-esc="record.substage_display.value"/>
                     </span>
                 </div>
             </xpath>

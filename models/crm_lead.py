@@ -17,6 +17,21 @@ class CrmLead(models.Model):
         help="Additional classification within the stage"
     )
     
+    substage_display = fields.Char(
+        string='Substage Display',
+        compute='_compute_substage_display',
+        store=False,
+        help="Formatted substage for display in kanban and list views"
+    )
+    
+    @api.depends('sub_stage_id')
+    def _compute_substage_display(self):
+        for record in self:
+            if record.sub_stage_id:
+                record.substage_display = record.sub_stage_id.name
+            else:
+                record.substage_display = False
+    
     def action_open_substage_wizard(self, stage_id=False):
         """Open a wizard to select the substage when changing stage"""
         self.ensure_one()
